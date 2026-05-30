@@ -1,0 +1,8 @@
+.text-warning-hover:hover {
+    color: #ffc107 !important;
+    transition: color 0.2s ease-in-out;
+}
+.college-footer a:hover {
+    color: #ffc107 !important;
+    transition: color 0.15s ease-in-out;
+}

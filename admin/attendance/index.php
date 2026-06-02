@@ -10,6 +10,7 @@ $active_page = 'admin_attendance';
 require_once $base_path . 'includes/auth.php';
 require_role('admin');
 require_once $base_path . 'config/db_connect.php';
+require_once $base_path . 'includes/certificate_helper.php';
 
 $alert_message = '';
 
@@ -82,10 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && isset($_
             $upd_tk->execute();
 
             // C. Generate and save certificate (Certificate Eligibility check: Present + Completed)
-            $cert_code = "CERT-WS-" . $tk['ticket_number'];
-            $ins_cert = $conn->prepare("INSERT INTO workshop_certificates (ticket_id, certificate_code) VALUES (?, ?) ON DUPLICATE KEY UPDATE certificate_code = ?");
-            $ins_cert->bind_param("iss", $ticket_id, $cert_code, $cert_code);
-            $ins_cert->execute();
+            $cert_res = generate_certificate($ticket_id, $admin_id);
+            if (!$cert_res['success']) {
+                throw new Exception("Certificate Generation Failed: " . $cert_res['message']);
+            }
 
             // D. Log activity in activity_logs
             $log_details = "Attendance marked PRESENT for student: " . $tk['full_name'] . " in workshop: " . $tk['ws_title'] . ". Ticket: " . $tk['ticket_number'] . ". Certificate generated automatically.";

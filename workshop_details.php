@@ -115,8 +115,8 @@ include $base_path . 'includes/navbar.php';
                 <div class="card-body p-4">
                     <!-- Seats Availability Counter -->
                     <div class="mb-4 p-3 bg-light rounded-3 border">
-                        <span class="text-muted small text-uppercase fw-bold d-block mb-1">Seats Remaining</span>
-                        <div class="display-6 fw-bold text-success"><?php echo intval($ws['seats_remaining']); ?> <span class="fs-5 text-muted">/ <?php echo intval($ws['capacity']); ?></span></div>
+                        <span class="text-muted small text-uppercase fw-bold d-block mb-1">Seats Booked</span>
+                        <div class="display-6 fw-bold text-success"><?php echo intval($ws['capacity']) - intval($ws['seats_remaining']); ?> <span class="fs-5 text-muted">/ <?php echo intval($ws['capacity']); ?></span></div>
                     </div>
 
                     <!-- Dynamic Action Buttons -->

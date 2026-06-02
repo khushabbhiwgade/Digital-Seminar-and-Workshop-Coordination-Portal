@@ -20,8 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        // 1. Fetch workshop details (using FOR UPDATE to secure concurrent seat deductions)
-        $fetch_sql = "SELECT seats_remaining, status, title FROM workshops WHERE id = ? FOR UPDATE";
+        // 1. Start Database Transaction FIRST for atomic concurrency protection
+        $conn->begin_transaction();
+
+        // 2. Lock the workshop row to prevent concurrent modifications
+        $fetch_sql = "SELECT capacity, status, title FROM workshops WHERE id = ? FOR UPDATE";
         $stmt = $conn->prepare($fetch_sql);
         $stmt->bind_param("i", $workshop_id);
         $stmt->execute();
@@ -31,15 +34,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("The selected workshop does not exist.");
         }
 
-        if ($ws['seats_remaining'] <= 0) {
-            throw new Exception("Registration failed. The workshop is fully booked.");
-        }
-
         if ($ws['status'] === 'archived') {
             throw new Exception("Registration failed. This workshop has been archived.");
         }
 
-        // 2. Check if already registered (in the tickets table)
+        // 3. DYNAMIC seat availability — count active registrations atomically
+        $count_sql = "SELECT COUNT(*) as reg_count FROM tickets WHERE event_id = ? AND registration_status NOT IN ('Cancelled', 'Rejected')";
+        $count_stmt = $conn->prepare($count_sql);
+        $count_stmt->bind_param("i", $workshop_id);
+        $count_stmt->execute();
+        $reg_count = intval($count_stmt->get_result()->fetch_assoc()['reg_count']);
+
+        $available = intval($ws['capacity']) - $reg_count;
+        if ($available <= 0) {
+            throw new Exception("Registration failed. The workshop is fully booked.");
+        }
+
+        // 4. Check if already registered (in the tickets table)
         $check_reg_sql = "SELECT id FROM tickets WHERE user_id = ? AND event_id = ?";
         $check_stmt = $conn->prepare($check_reg_sql);
         $check_stmt->bind_param("ii", $user_id, $workshop_id);
@@ -49,9 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($existing_reg && $existing_reg->num_rows > 0) {
             throw new Exception("You are already registered for this workshop.");
         }
-
-        // 3. Start Database Transaction
-        $conn->begin_transaction();
 
         // A. Generate sequential ticket number (Format: TKT-YYYY-NNNNN)
         $year = date('Y');
@@ -122,16 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Error saving registration details.");
         }
 
-        // D. Decrement workshop seats remaining
-        $update_seats_sql = "UPDATE workshops SET seats_remaining = seats_remaining - 1 WHERE id = ?";
-        $update_stmt = $conn->prepare($update_seats_sql);
-        $update_stmt->bind_param("i", $workshop_id);
-
-        if (!$update_stmt->execute()) {
-            throw new Exception("Error updating workshop seats availability.");
-        }
-
-        // E. Log Activity Log
+        // D. Log Activity Log
         $log_action = "Registration";
         $log_details = "Participant registered for workshop: " . $ws['title'] . " (ID: $workshop_id). Ticket: $ticket_number.";
         $log_stmt = $conn->prepare("INSERT INTO activity_logs (user_id, action, details) VALUES (?, ?, ?)");

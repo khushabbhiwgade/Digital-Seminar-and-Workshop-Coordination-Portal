@@ -223,8 +223,8 @@ include $base_path . 'includes/navbar.php';
                                         <div class="small text-muted mt-1"><i class="fa-solid fa-location-dot me-1"></i><?php echo htmlspecialchars($ws['venue']); ?></div>
                                     </td>
                                     <td class="text-center">
-                                        <div class="fw-bold"><?php echo intval($ws['seats_remaining']); ?> <span class="text-muted fw-normal">/ <?php echo intval($ws['capacity']); ?></span></div>
-                                        <div class="text-muted small fs-7">Seats Left</div>
+                                        <div class="fw-bold"><?php echo intval($ws['capacity']) - intval($ws['seats_remaining']); ?> <span class="text-muted fw-normal">/ <?php echo intval($ws['capacity']); ?></span></div>
+                                        <div class="text-muted small fs-7">Seats Booked</div>
                                     </td>
                                     <td class="text-center">
                                         <?php

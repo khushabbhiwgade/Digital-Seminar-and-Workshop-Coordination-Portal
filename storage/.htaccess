@@ -1,0 +1,3 @@
+# Secure Storage Directory
+# Block direct HTTP access to certificates and QR codes
+Deny from all

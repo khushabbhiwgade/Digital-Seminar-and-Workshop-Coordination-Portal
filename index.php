@@ -4,6 +4,8 @@ $page_title = 'Digital Seminar & Workshop Coordination Portal';
 $active_page = 'home';
 include $base_path . 'includes/header.php';
 include $base_path . 'includes/navbar.php';
+require_once $base_path . 'config/db_connect.php';
+require_once $base_path . 'includes/workshop_availability.php';
 
 if (isset($_GET['error']) && $_GET['error'] === 'unauthorized'):
 ?>
@@ -31,12 +33,22 @@ endif;
                     <h1 class="display-4 fw-bold mb-3">Learn. Innovate. Grow.</h1>
                     <p class="lead mb-4">Welcome to the College Seminar and Workshop Coordination Portal. Discover upcoming guest lectures, technical workshops, and national seminars conducted by industry leaders and academic pioneers.</p>
                     <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
-                        <a href="events.php" class="btn btn-warning btn-lg px-4 text-dark fw-bold">
-                            <i class="fa-solid fa-calendar-days me-2"></i>View All Events
+                        <a href="#featured-events" class="btn btn-warning btn-lg px-4 text-dark fw-bold">
+                            <i class="fa-solid fa-calendar-days me-2"></i>Explore Workshops
                         </a>
-                        <a href="student/register.php" class="btn btn-outline-light btn-lg px-4">
-                            <i class="fa-solid fa-user-plus me-2"></i>Register Now
-                        </a>
+                        <?php if (is_logged_in() && get_user_role() === 'student'): ?>
+                            <a href="participant/dashboard.php" class="btn btn-outline-light btn-lg px-4">
+                                <i class="fa-solid fa-gauge me-2"></i>Go to Dashboard
+                            </a>
+                        <?php elseif (is_logged_in() && get_user_role() === 'admin'): ?>
+                            <a href="admin/dashboard.php" class="btn btn-outline-light btn-lg px-4">
+                                <i class="fa-solid fa-gauge me-2"></i>Go to Admin Board
+                            </a>
+                        <?php else: ?>
+                            <a href="auth/signup.php" class="btn btn-outline-light btn-lg px-4">
+                                <i class="fa-solid fa-user-plus me-2"></i>Sign Up
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="col-lg-5 d-none d-lg-block text-center">
@@ -74,83 +86,112 @@ endif;
         </div>
     </section>
 
-    <section class="section-padding" style="padding: 60px 0; background-color: #f8fafc;">
+    <section id="featured-events" class="section-padding" style="padding: 60px 0; background-color: #f8fafc;">
         <div class="container">
             <div class="d-flex justify-content-between align-items-end mb-4">
                 <div>
                     <span class="text-primary fw-bold text-uppercase">Events At A Glance</span>
                     <h2 class="mb-0">Featured Upcoming Events</h2>
                 </div>
-                <a href="events.php" class="btn btn-outline-primary d-none d-sm-inline-block">See All Events <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                <?php if (is_logged_in() && get_user_role() === 'student'): ?>
+                    <a href="participant/dashboard.php" class="btn btn-outline-primary d-none d-sm-inline-block">See All Events in Dashboard <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                <?php else: ?>
+                    <a href="auth/login.php" class="btn btn-outline-primary d-none d-sm-inline-block">Login to Register <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                <?php endif; ?>
             </div>
             <div class="row g-4">
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
-                        <div class="position-relative">
-                            <span class="badge bg-primary text-white position-absolute top-0 start-0 m-3 px-3 py-2" style="z-index: 10;">Seminar</span>
-                            <div class="d-flex align-items-center justify-content-center text-white" style="height: 200px; background: linear-gradient(45deg, #10b981, #059669);">
-                                <i class="fa-solid fa-microchip display-4"></i>
+                <?php
+                // Fetch active upcoming workshops with dynamic availability
+                $upcoming_workshops = get_upcoming_workshops_availability($conn, 3);
+
+                if (count($upcoming_workshops) > 0):
+                    $index = 0;
+                    foreach ($upcoming_workshops as $ws):
+                        $domain = strtolower($ws['domain']);
+                        $badge_class = 'bg-primary';
+                        $icon = 'fa-chalkboard-user';
+                        $gradient = 'linear-gradient(45deg, #3b82f6, #1d4ed8)'; // Default Blue
+
+                        if (strpos($domain, 'ai') !== false || strpos($domain, 'machine') !== false || strpos($domain, 'intel') !== false) {
+                            $badge_class = 'bg-primary';
+                            $icon = 'fa-microchip';
+                            $gradient = 'linear-gradient(45deg, #10b981, #059669)'; // Green
+                        } elseif (strpos($domain, 'web') !== false || strpos($domain, 'development') !== false || strpos($domain, 'react') !== false || strpos($domain, 'node') !== false) {
+                            $badge_class = 'bg-success';
+                            $icon = 'fa-code';
+                            $gradient = 'linear-gradient(45deg, #6366f1, #4f46e5)'; // Indigo
+                        } elseif (strpos($domain, 'security') !== false || strpos($domain, 'cyber') !== false || strpos($domain, 'hacking') !== false) {
+                            $badge_class = 'bg-danger';
+                            $icon = 'fa-shield-halved';
+                            $gradient = 'linear-gradient(45deg, #ef4444, #dc2626)'; // Red
+                        } elseif (strpos($domain, 'cloud') !== false || strpos($domain, 'aws') !== false) {
+                            $badge_class = 'bg-info';
+                            $icon = 'fa-cloud';
+                            $gradient = 'linear-gradient(45deg, #0ea5e9, #2563eb)'; // Sky Blue
+                        }
+
+                        // Set button path based on roles
+                        $btn_path = 'auth/login.php';
+                        $btn_text = 'Register Now';
+                        if (is_logged_in()) {
+                            if (get_user_role() === 'student') {
+                                $btn_path = 'participant/dashboard.php';
+                                $btn_text = 'Register in Dashboard';
+                            } else {
+                                $btn_path = get_user_role() . '/dashboard.php';
+                                $btn_text = 'Go to Dashboard';
+                            }
+                        }
+                        ?>
+                        <div class="col-md-6 col-lg-4" data-workshop-id="<?php echo intval($ws['id']); ?>">
+                            <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden bg-white">
+                                <div class="position-relative">
+                                    <span class="badge <?php echo $badge_class; ?> text-white position-absolute top-0 start-0 m-3 px-3 py-2 text-uppercase" style="z-index: 10;"><?php echo htmlspecialchars($ws['domain']); ?></span>
+                                    <div class="d-flex align-items-center justify-content-center text-white" style="height: 200px; background: <?php echo $gradient; ?>;">
+                                        <i class="fa-solid <?php echo $icon; ?> display-4"></i>
+                                    </div>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="event-meta text-muted small mb-2">
+                                        <span><i class="fa-solid fa-calendar me-1"></i> <?php echo date('M d, Y', strtotime($ws['start_date'])); ?></span>
+                                        <br>
+                                        <span class="d-inline-block mt-1"><i class="fa-solid fa-location-dot me-1 text-danger"></i> <?php echo htmlspecialchars($ws['venue']); ?></span>
+                                    </div>
+                                    <h5 class="card-title fw-bold text-dark text-truncate-2" style="min-height: 48px;"><?php echo htmlspecialchars($ws['title']); ?></h5>
+                                    <p class="card-text text-muted small mb-3">Speaker: <strong><?php echo htmlspecialchars($ws['speaker']); ?></strong></p>
+                                    <div class="d-flex justify-content-between align-items-center small mb-2 bg-light p-2 rounded">
+                                        <span class="text-secondary">Seats Booked:</span>
+                                        <span class="fw-bold text-success" data-avail-booked><i class="fa-solid fa-chair me-1"></i><?php echo intval($ws['registered']); ?> / <?php echo intval($ws['capacity']); ?></span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="progress" style="height:6px;">
+                                            <?php $pct = $ws['capacity'] > 0 ? round(($ws['registered'] / $ws['capacity']) * 100) : 0; ?>
+                                            <div class="progress-bar <?php echo ($pct >= 100) ? 'bg-danger' : (($pct >= 75) ? 'bg-warning' : 'bg-primary'); ?>" data-avail-progress role="progressbar" style="width: <?php echo $pct; ?>%" aria-valuenow="<?php echo $pct; ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-1" style="font-size: 0.75rem;">
+                                            <span class="text-muted"><span data-avail-available><?php echo intval($ws['available']); ?></span> seats left</span>
+                                            <span class="badge <?php echo ($ws['status'] === 'Open') ? 'bg-success' : 'bg-danger'; ?>" data-avail-status><?php echo $ws['status']; ?></span>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <a href="<?php echo $btn_path; ?>" class="btn btn-warning text-dark fw-bold"><?php echo $btn_text; ?></a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="card-body p-4">
-                            <div class="event-meta text-muted small mb-2">
-                                <span><i class="fa-solid fa-calendar me-1"></i> May 28, 2026</span>
-                                <span class="ms-3"><i class="fa-solid fa-location-dot me-1"></i> Seminar Hall A</span>
-                            </div>
-                            <h5 class="card-title fw-bold">National Seminar on AI &amp; ML</h5>
-                            <p class="card-text text-muted small">A comprehensive session covering Neural Networks, Deep Learning trends, and realistic industry applications of AI.</p>
-                            <div class="d-grid mt-3">
-                                <a href="student/register.php?event=AI%20%26%20ML" class="btn btn-primary">Register Now</a>
-                            </div>
-                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12 text-center py-5">
+                        <i class="fa-solid fa-calendar-xmark text-muted display-4 mb-3 d-block"></i>
+                        <h4 class="text-secondary fw-semibold">No Upcoming Events Available</h4>
+                        <p class="text-muted">All our seminars and workshops have been completed. Please check back later for new programs.</p>
                     </div>
-                </div>
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
-                        <div class="position-relative">
-                            <span class="badge bg-success text-white position-absolute top-0 start-0 m-3 px-3 py-2" style="z-index: 10;">Workshop</span>
-                            <div class="d-flex align-items-center justify-content-center text-white" style="height: 200px; background: linear-gradient(45deg, #6366f1, #4f46e5);">
-                                <i class="fa-solid fa-code display-4"></i>
-                            </div>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="event-meta text-muted small mb-2">
-                                <span><i class="fa-solid fa-calendar me-1"></i> June 02, 2026</span>
-                                <span class="ms-3"><i class="fa-solid fa-location-dot me-1"></i> CSE Lab 3</span>
-                            </div>
-                            <h5 class="card-title fw-bold">Web Development with React &amp; Node</h5>
-                            <p class="card-text text-muted small">A full-day practical workshop building real-world single page applications. Beginner-friendly steps.</p>
-                            <div class="d-grid mt-3">
-                                <a href="student/register.php?event=Web%20Development" class="btn btn-primary">Register Now</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4 d-md-none d-lg-block">
-                    <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden">
-                        <div class="position-relative">
-                            <span class="badge bg-danger text-white position-absolute top-0 start-0 m-3 px-3 py-2" style="z-index: 10;">Seminar</span>
-                            <div class="d-flex align-items-center justify-content-center text-white" style="height: 200px; background: linear-gradient(45deg, #ef4444, #dc2626);">
-                                <i class="fa-solid fa-shield-halved display-4"></i>
-                            </div>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="event-meta text-muted small mb-2">
-                                <span><i class="fa-solid fa-calendar me-1"></i> June 10, 2026</span>
-                                <span class="ms-3"><i class="fa-solid fa-location-dot me-1"></i> Main Auditorium</span>
-                            </div>
-                            <h5 class="card-title fw-bold">Cyber Security &amp; Ethical Hacking</h5>
-                            <p class="card-text text-muted small">Demystifying security protocols, firewalls, and exploring ethical hacking tools for modern network systems.</p>
-                            <div class="d-grid mt-3">
-                                <a href="student/register.php?event=Cyber%20Security" class="btn btn-primary">Register Now</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <?php endif; ?>
             </div>
         </div>
     </section>
 
+<script src="assets/js/availability.js"></script>
 <?php
 include $base_path . 'includes/footer.php';
 ?>

@@ -18,6 +18,9 @@ $error_msg = "";
 if (isset($_GET['msg']) && $_GET['msg'] === 'register_success') {
     $success_msg = "Successfully registered for the workshop! Your ticket is generated below.";
 }
+if (isset($_GET['msg']) && $_GET['msg'] === 'feedback_success') {
+    $success_msg = "Thank you! Your workshop feedback has been submitted successfully.";
+}
 if (isset($_GET['error'])) {
     $error_msg = htmlspecialchars($_GET['error']);
 }
@@ -52,7 +55,7 @@ if ($count_res3) {
 
 // Certificates Available
 $cert_count = 0;
-$stmt4 = $conn->prepare("SELECT COUNT(*) as cnt FROM workshop_certificates wc JOIN tickets t ON wc.ticket_id = t.id WHERE t.user_id = ?");
+$stmt4 = $conn->prepare("SELECT COUNT(*) as cnt FROM certificates c JOIN tickets t ON c.registration_id = t.id WHERE t.user_id = ? AND c.status = 'Generated'");
 $stmt4->bind_param("i", $user_id);
 $stmt4->execute();
 $count_res4 = $stmt4->get_result();
@@ -167,7 +170,7 @@ include $base_path . 'includes/navbar.php';
                                     </div>
                                     <div class="text-muted small">
                                         <i class="fa-solid fa-user-tie me-1"></i><?php echo htmlspecialchars($ws['speaker']); ?> | 
-                                        <span class="fw-semibold"><i class="fa-solid fa-chair text-success me-1"></i><?php echo intval($ws['seats_remaining']); ?> / <?php echo intval($ws['capacity']); ?> Seats Left</span>
+                                        <span class="fw-semibold"><i class="fa-solid fa-chair text-success me-1"></i><?php echo intval($ws['capacity']) - intval($ws['seats_remaining']); ?> / <?php echo intval($ws['capacity']); ?> Seats Booked</span>
                                     </div>
                                 </div>
                                 
@@ -316,42 +319,171 @@ include $base_path . 'includes/navbar.php';
         </div>
     </div>
 
-    <!-- Row 3: Available Certificates -->
+    <!-- Row 3: Latest Certificate & Available Certificates (Part 14) -->
     <div class="row g-4 mt-2">
         <div class="col-12">
             <div class="card shadow-sm border-0 rounded-3">
-                <div class="card-header bg-dark text-white py-3">
-                    <h5 class="mb-0"><i class="fa-solid fa-award text-warning me-2"></i>Available Certificates</h5>
+                <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fa-solid fa-award text-warning me-2"></i>My Earned Certificates</h5>
+                    <a href="certificates.php" class="btn btn-warning btn-sm text-dark fw-bold px-3">View All Certificates Center</a>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-4">
                     <?php
-                    // Fetch certificates
-                    $my_cert_q = $conn->prepare("SELECT wc.certificate_code, wc.issued_at, w.title FROM workshop_certificates wc JOIN tickets t ON wc.ticket_id = t.id JOIN workshops w ON t.event_id = w.id WHERE t.user_id = ? ORDER BY wc.issued_at DESC");
+                    // Fetch latest certificate
+                    $my_cert_q = $conn->prepare("
+                        SELECT c.id, c.certificate_no, c.verification_code, c.generated_at, w.title 
+                        FROM certificates c 
+                        JOIN tickets t ON c.registration_id = t.id 
+                        JOIN workshops w ON c.event_id = w.id 
+                        WHERE t.user_id = ? AND c.status = 'Generated'
+                        ORDER BY c.generated_at DESC LIMIT 1
+                    ");
                     $my_cert_q->bind_param("i", $user_id);
                     $my_cert_q->execute();
                     $my_cert_res = $my_cert_q->get_result();
 
                     if ($my_cert_res && $my_cert_res->num_rows > 0):
-                        while ($ct = $my_cert_res->fetch_assoc()):
-                            ?>
-                            <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
-                                <div>
-                                    <h6 class="fw-bold mb-1 text-dark"><i class="fa-solid fa-award text-warning me-1"></i><?php echo htmlspecialchars($ct['title']); ?></h6>
-                                    <div class="text-muted small">Verification: <code class="text-primary fw-bold"><?php echo htmlspecialchars($ct['certificate_code']); ?></code></div>
-                                    <div class="text-muted small">Issued: <?php echo date('M d, Y', strtotime($ct['issued_at'])); ?></div>
+                        $ct = $my_cert_res->fetch_assoc();
+                        ?>
+                        <div class="bg-light p-4 rounded-3 border border-success border-start border-4 mb-0">
+                            <div class="row align-items-center">
+                                <div class="col-lg-8 mb-3 mb-lg-0">
+                                    <span class="badge bg-success text-uppercase mb-2"><i class="fa-solid fa-star me-1"></i>Latest Certificate</span>
+                                    <h4 class="fw-bold mb-1 text-dark"><?php echo htmlspecialchars($ct['title']); ?></h4>
+                                    <div class="text-muted small">
+                                        Number: <code class="text-primary fw-bold"><?php echo htmlspecialchars($ct['certificate_no']); ?></code> | 
+                                        Verification Code: <code class="text-success fw-bold"><?php echo htmlspecialchars($ct['verification_code']); ?></code> |
+                                        Issued: <?php echo date('M d, Y', strtotime($ct['generated_at'])); ?>
+                                    </div>
                                 </div>
-                                <a href="#" class="btn btn-sm btn-success fw-semibold shadow-sm" onclick="alert('Downloading Certificate Code: <?php echo htmlspecialchars($ct['certificate_code']); ?>'); return false;">
-                                    <i class="fa-solid fa-download me-1"></i>Download
-                                </a>
+                                <div class="col-lg-4 text-lg-end">
+                                    <div class="d-inline-flex gap-2">
+                                        <a href="certificates.php?action=download&id=<?php echo $ct['id']; ?>" class="btn btn-success fw-bold shadow-sm">
+                                            <i class="fa-solid fa-download me-1"></i>Download PDF
+                                        </a>
+                                        <a href="../verify_certificate.php?code=<?php echo urlencode($ct['verification_code']); ?>" class="btn btn-outline-primary fw-bold">
+                                            <i class="fa-solid fa-shield-halved me-1"></i>Verify
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
-                        <?php endwhile; ?>
+                        </div>
                     <?php else: ?>
-                        <p class="text-muted text-center py-5 mb-0"><i class="fa-solid fa-award fs-3 d-block mb-2 text-secondary"></i>No certificates issued yet. Complete a session to earn yours.</p>
+                        <p class="text-muted text-center py-4 mb-0"><i class="fa-solid fa-award fs-3 d-block mb-2 text-secondary"></i>No certificates earned yet. Complete your registered sessions to receive them automatically.</p>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Row 4: Pending Feedback & Submitted Feedback (Part 9 & Part 14) -->
+    <div class="row g-4 mt-2">
+        <!-- 1. Pending Feedback Section -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-3 h-100 bg-white">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="mb-0"><i class="fa-solid fa-comments text-warning me-2"></i>Pending Feedback Surveys</h5>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    <?php
+                    // Fetch completed tickets awaiting feedback
+                    $pf_stmt = $conn->prepare("
+                        SELECT t.id as ticket_id, w.title, w.start_date, w.host, w.speaker
+                        FROM tickets t
+                        JOIN workshops w ON t.event_id = w.id
+                        JOIN attendance a ON t.id = a.ticket_id
+                        LEFT JOIN feedback f ON t.id = f.registration_id
+                        WHERE t.user_id = ? 
+                          AND a.attendance_status = 'Present' 
+                          AND t.registration_status = 'Completed' 
+                          AND f.id IS NULL
+                        ORDER BY w.start_date DESC
+                    ");
+                    $pf_stmt->bind_param("i", $user_id);
+                    $pf_stmt->execute();
+                    $pf_res = $pf_stmt->get_result();
+
+                    if ($pf_res && $pf_res->num_rows > 0):
+                        while ($pw = $pf_res->fetch_assoc()):
+                            ?>
+                            <div class="d-flex align-items-center justify-content-between p-3 border-bottom hover-bg-light">
+                                <div class="pe-2">
+                                    <h6 class="fw-bold mb-1 text-dark"><?php echo htmlspecialchars($pw['title']); ?></h6>
+                                    <div class="text-muted small"><i class="fa-solid fa-user-tie me-1"></i><?php echo htmlspecialchars($pw['speaker']); ?> | <i class="fa-solid fa-calendar me-1"></i><?php echo date('M d, Y', strtotime($pw['start_date'])); ?></div>
+                                </div>
+                                <a href="feedback.php?id=<?php echo $pw['ticket_id']; ?>" class="btn btn-sm btn-warning text-dark fw-bold px-3 text-nowrap">
+                                    Submit Feedback
+                                </a>
+                            </div>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <p class="text-muted text-center py-5 mb-0"><i class="fa-solid fa-circle-question fs-3 d-block mb-2 text-secondary"></i>No pending feedback surveys at this time.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Submitted Feedback Section -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 rounded-3 h-100 bg-white">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="mb-0"><i class="fa-solid fa-star text-warning me-2"></i>Submitted Feedback</h5>
+                </div>
+                <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                    <?php
+                    // Fetch completed tickets with feedback submitted
+                    $sf_stmt = $conn->prepare("
+                        SELECT f.id as feedback_id, f.submitted_at, f.overall_rating, t.id as ticket_id,
+                               w.title, w.start_date, w.host
+                        FROM feedback f
+                        JOIN tickets t ON f.registration_id = t.id
+                        JOIN workshops w ON t.event_id = w.id
+                        WHERE t.user_id = ?
+                        ORDER BY f.submitted_at DESC
+                    ");
+                    $sf_stmt->bind_param("i", $user_id);
+                    $sf_stmt->execute();
+                    $sf_res = $sf_stmt->get_result();
+
+                    if ($sf_res && $sf_res->num_rows > 0):
+                        while ($sw = $sf_res->fetch_assoc()):
+                            $submitted_time = strtotime($sw['submitted_at']);
+                            $elapsed_hours = (time() - $submitted_time) / 3600;
+                            $is_locked = ($elapsed_hours >= 24);
+                            ?>
+                            <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
+                                <div class="pe-2">
+                                    <h6 class="fw-bold mb-1 text-dark"><?php echo htmlspecialchars($sw['title']); ?></h6>
+                                    <div class="text-muted small">
+                                        <i class="fa-solid fa-calendar me-1"></i>Rated: 
+                                        <span class="text-warning fw-bold">
+                                            <?php for ($i = 1; $i <= 5; $i++) {
+                                                echo ($i <= $sw['overall_rating']) ? '★' : '☆';
+                                            } ?>
+                                        </span> | 
+                                        Submitted: <?php echo date('M d, Y', $submitted_time); ?>
+                                    </div>
+                                </div>
+                                
+                                <?php if ($is_locked): ?>
+                                    <span class="badge bg-secondary px-2.5 py-1 text-uppercase font-monospace fs-9 text-nowrap" title="Feedback locked after 24 hours.">
+                                        <i class="fa-solid fa-lock me-1"></i>Locked
+                                    </span>
+                                <?php else: ?>
+                                    <a href="feedback.php?id=<?php echo $sw['ticket_id']; ?>" class="btn btn-sm btn-outline-primary fw-semibold text-nowrap">
+                                        Edit Feedback
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <p class="text-muted text-center py-5 mb-0"><i class="fa-solid fa-star fs-3 d-block mb-2 text-secondary"></i>You have not submitted any feedback yet.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
 </div>
 
 <style>

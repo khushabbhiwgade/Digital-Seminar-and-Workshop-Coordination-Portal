@@ -15,8 +15,12 @@
                     <h5 class="text-white mb-3">Quick Links</h5>
                     <ul class="list-unstyled small">
                         <li class="mb-2"><a href="<?php echo $base_path; ?>index.php" class="link-light text-white-50 text-decoration-none"><i class="fa-solid fa-chevron-right me-2 text-warning" style="font-size:0.7rem;"></i>Home</a></li>
-                        <li class="mb-2"><a href="<?php echo $base_path; ?>events.php" class="link-light text-white-50 text-decoration-none"><i class="fa-solid fa-chevron-right me-2 text-warning" style="font-size:0.7rem;"></i>Events Listing</a></li>
-                        <li class="mb-2"><a href="<?php echo $base_path; ?>student/register.php" class="link-light text-white-50 text-decoration-none"><i class="fa-solid fa-chevron-right me-2 text-warning" style="font-size:0.7rem;"></i>Student Registration</a></li>
+                        <li class="mb-2"><a href="<?php echo $base_path; ?>index.php#featured-events" class="link-light text-white-50 text-decoration-none"><i class="fa-solid fa-chevron-right me-2 text-warning" style="font-size:0.7rem;"></i>Featured Workshops</a></li>
+                        <?php if (is_logged_in() && get_user_role() === 'student'): ?>
+                            <li class="mb-2"><a href="<?php echo $base_path; ?>participant/dashboard.php" class="link-light text-white-50 text-decoration-none"><i class="fa-solid fa-chevron-right me-2 text-warning" style="font-size:0.7rem;"></i>Student Dashboard</a></li>
+                        <?php else: ?>
+                            <li class="mb-2"><a href="<?php echo $base_path; ?>auth/signup.php" class="link-light text-white-50 text-decoration-none"><i class="fa-solid fa-chevron-right me-2 text-warning" style="font-size:0.7rem;"></i>Student Sign Up</a></li>
+                        <?php endif; ?>
                     </ul>
                 </div>
                 <div class="col-md-4">

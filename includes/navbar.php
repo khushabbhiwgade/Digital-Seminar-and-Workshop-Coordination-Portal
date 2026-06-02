@@ -62,6 +62,9 @@ require_once $base_path . 'includes/auth.php';
                         <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_students') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/students.php">Students</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_workshops') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/workshops/manage.php">Workshops</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_attendance') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/attendance.php">Attendance</a>
                     </li>
                     <li class="nav-item">

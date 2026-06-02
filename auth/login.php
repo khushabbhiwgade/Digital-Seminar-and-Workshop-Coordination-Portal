@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_msg = "Please enter both email and password.";
     } else {
         // Find user by email
-        $sql = "SELECT id, email, password, full_name, role FROM users WHERE email = ?";
+        $sql = "SELECT id, email, password, full_name, role, is_verified FROM users WHERE email = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("s", $email);
         $stmt->execute();
@@ -41,32 +41,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             // Check if password column is set and verified
             if ($user['password'] !== null && password_verify($password, $user['password'])) {
-                // Prevent session fixation
-                session_regenerate_id(true);
-
-                // Set session variables
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['user_name'] = $user['full_name'];
-                $_SESSION['role'] = $user['role'];
-
-                // Handle post-login redirection URL if available
-                $redirect = $_SESSION['redirect_url'] ?? '';
-                unset($_SESSION['redirect_url']);
-
-                if (!empty($redirect)) {
-                    header("Location: " . $redirect);
+                // Check if account is verified
+                if (isset($user['is_verified']) && $user['is_verified'] == 0) {
+                    $_SESSION['otp_email'] = $user['email'];
+                    $error_msg = "Please verify your email before logging in. <a href='verify_otp.php' class='alert-link fw-semibold text-decoration-underline'>Verify here</a>";
                 } else {
-                    // Default redirection by role
-                    if ($user['role'] === 'admin') {
-                        header("Location: ../admin/dashboard.php");
-                    } elseif ($user['role'] === 'coordinator') {
-                        header("Location: ../coordinator/dashboard.php");
+                    // Prevent session fixation
+                    session_regenerate_id(true);
+
+                    // Set session variables
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['email'] = $user['email'];
+                    $_SESSION['user_name'] = $user['full_name'];
+                    $_SESSION['role'] = $user['role'];
+
+                    // Handle post-login redirection URL if available
+                    $redirect = $_SESSION['redirect_url'] ?? '';
+                    unset($_SESSION['redirect_url']);
+
+                    if (!empty($redirect)) {
+                        header("Location: " . $redirect);
                     } else {
-                        header("Location: ../student/dashboard.php");
+                        // Default redirection by role
+                        if ($user['role'] === 'admin') {
+                            header("Location: ../admin/dashboard.php");
+                        } elseif ($user['role'] === 'coordinator') {
+                            header("Location: ../coordinator/dashboard.php");
+                        } else {
+                            header("Location: ../student/dashboard.php");
+                        }
                     }
+                    exit;
                 }
-                exit;
             } else {
                 $error_msg = "Invalid email or password.";
             }
@@ -91,15 +97,29 @@ include $base_path . 'includes/navbar.php';
                 </div>
                 <div class="card-body p-4 p-md-5 bg-white">
                     <?php if (isset($_GET['signup']) && $_GET['signup'] === 'success'): ?>
+                        <div class="alert alert-warning alert-dismissible fade show border-start border-4 border-warning" role="alert">
+                            <i class="fa-solid fa-envelope-open-text me-2"></i>Account created successfully. A verification code has been sent. Please <a href="verify_otp.php" class="alert-link fw-semibold text-decoration-underline">verify your email</a> to log in.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (isset($_GET['verify']) && $_GET['verify'] === 'success'): ?>
                         <div class="alert alert-success alert-dismissible fade show border-start border-4 border-success" role="alert">
-                            <i class="fa-solid fa-circle-check me-2"></i>Account created successfully! Please log in below.
+                            <i class="fa-solid fa-circle-check me-2"></i>Email address verified successfully. You can now log in below.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (isset($_GET['verify']) && $_GET['verify'] === 'already'): ?>
+                        <div class="alert alert-info alert-dismissible fade show border-start border-4 border-info" role="alert">
+                            <i class="fa-solid fa-circle-info me-2"></i>Your email address is already verified. Please log in.
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     <?php endif; ?>
 
                     <?php if (!empty($error_msg)): ?>
                         <div class="alert alert-danger alert-dismissible fade show border-start border-4 border-danger" role="alert">
-                            <i class="fa-solid fa-triangle-exclamation me-2"></i><?php echo htmlspecialchars($error_msg); ?>
+                            <i class="fa-solid fa-triangle-exclamation me-2"></i><?php echo $error_msg; ?>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     <?php endif; ?>

@@ -2,3 +2,4 @@
 [2026-06-02 12:52:13] To: khushabbhiwgade@gmail.com (Khushab Bhiwgade) | OTP Code: 491344 | Subject: Verify Your Account - Campus Connect | Expiry: 5 Mins | SMTP Status: Offline (SMTP server credentials are not fully configured in config/mail_config.php.)
 [2026-06-02 12:53:22] To: khushabbhiwgade@gmail.com (Khushab Bhiwgade) | OTP Code: 645139 | Subject: Verify Your Account - Campus Connect | Expiry: 5 Mins | SMTP Status: Offline (SMTP server credentials are not fully configured in config/mail_config.php.)
 [2026-06-02 13:07:36] To: alexjoseph123@gmail.com (Alex Joseph) | OTP Code: 427261 | Subject: Verify Your Account | Expiry: 5 Mins | SMTP Status: Offline (SMTP server credentials are not fully configured in config/mail_config.php.)
+[2026-06-02 13:32:54] To: yashsonare64@gmail.com (Yash Sonare) | OTP Code: 660440 | Subject: Verify Your Account | Expiry: 5 Mins | SMTP Status: Offline (SMTP server credentials are not fully configured in config/mail_config.php.)

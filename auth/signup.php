@@ -28,9 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = trim($_POST['password'] ?? '');
     $confirm_password = trim($_POST['confirm_password'] ?? '');
+    $participant_type = trim($_POST['participant_type'] ?? '');
+    $organization = trim($_POST['organization'] ?? '');
 
     // Validation
-    if (empty($full_name) || empty($email) || empty($password) || empty($confirm_password)) {
+    if (empty($full_name) || empty($email) || empty($password) || empty($confirm_password) || empty($participant_type) || empty($organization)) {
         $error_msg = "All fields are required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error_msg = "Please enter a valid email address.";
@@ -51,9 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // Hash password and insert user
             $hashed_pass = password_hash($password, PASSWORD_BCRYPT);
-            $insert_sql = "INSERT INTO users (email, password, full_name, role) VALUES (?, ?, ?, 'student')";
+            $insert_sql = "INSERT INTO users (email, password, full_name, participant_type, organization, role) VALUES (?, ?, ?, ?, ?, 'participant')";
             $insert_stmt = $conn->prepare($insert_sql);
-            $insert_stmt->bind_param("sss", $email, $hashed_pass, $full_name);
+            $insert_stmt->bind_param("sssss", $email, $hashed_pass, $full_name, $participant_type, $organization);
 
             if ($insert_stmt->execute()) {
                 // Redirect on success
@@ -77,7 +79,7 @@ include $base_path . 'includes/navbar.php';
                 <div class="card-header bg-dark text-center text-white py-4" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-bottom: 2px solid #eab308;">
                     <i class="fa-solid fa-user-plus text-warning fs-1 mb-2"></i>
                     <h3 class="fw-bold mb-0">Create Account</h3>
-                    <p class="text-muted small mb-0 mt-1">Student Signup Portal</p>
+                    <p class="text-muted small mb-0 mt-1">Participant Signup Portal</p>
                 </div>
                 <div class="card-body p-4 p-md-5 bg-white">
                     <?php if (!empty($error_msg)): ?>
@@ -101,6 +103,31 @@ include $base_path . 'includes/navbar.php';
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-envelope"></i></span>
                                 <input type="email" class="form-control" id="email" name="email" placeholder="name@college.edu" value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="participant_type" class="form-label fw-semibold">Participant Category <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-user-tag"></i></span>
+                                <select class="form-select" id="participant_type" name="participant_type" required>
+                                    <option value="" disabled <?php echo !isset($_POST['participant_type']) ? 'selected' : ''; ?>>Select Category</option>
+                                    <?php
+                                    $categories = ['Student', 'Faculty', 'Professional', 'Researcher', 'Alumni', 'Other'];
+                                    foreach ($categories as $cat) {
+                                        $selected = (isset($_POST['participant_type']) && $_POST['participant_type'] === $cat) ? 'selected' : '';
+                                        echo "<option value=\"$cat\" $selected>$cat</option>";
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="organization" class="form-label fw-semibold">Organization / College <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-building"></i></span>
+                                <input type="text" class="form-control" id="organization" name="organization" placeholder="e.g., Apex Institute / Tech Corp" value="<?php echo isset($_POST['organization']) ? htmlspecialchars($_POST['organization']) : ''; ?>" required>
                             </div>
                         </div>
 

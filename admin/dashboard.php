@@ -27,11 +27,11 @@ include $base_path . 'includes/navbar.php';
     <!-- Quick Link Actions for Admin Tasks -->
     <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <a href="students.php" class="text-decoration-none text-dark">
+            <a href="participants.php" class="text-decoration-none text-dark">
                 <div class="card h-100 border-0 shadow-sm rounded-3 p-3 bg-white hover-card text-center">
                     <div class="display-6 text-primary mb-2"><i class="fa-solid fa-users"></i></div>
-                    <h5 class="fw-bold mb-1">Student Accounts</h5>
-                    <span class="text-muted small">Manage student records &amp; profiles</span>
+                    <h5 class="fw-bold mb-1">Participant Accounts</h5>
+                    <span class="text-muted small">Manage registered profiles &amp; access</span>
                 </div>
             </a>
         </div>

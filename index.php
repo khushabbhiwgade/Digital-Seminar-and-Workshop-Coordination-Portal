@@ -34,7 +34,7 @@ endif;
                         <a href="events.php" class="btn btn-warning btn-lg px-4 text-dark fw-bold">
                             <i class="fa-solid fa-calendar-days me-2"></i>View All Events
                         </a>
-                        <a href="student/register.php" class="btn btn-outline-light btn-lg px-4">
+                        <a href="participant/register.php" class="btn btn-outline-light btn-lg px-4">
                             <i class="fa-solid fa-user-plus me-2"></i>Register Now
                         </a>
                     </div>
@@ -100,7 +100,7 @@ endif;
                             <h5 class="card-title fw-bold">National Seminar on AI &amp; ML</h5>
                             <p class="card-text text-muted small">A comprehensive session covering Neural Networks, Deep Learning trends, and realistic industry applications of AI.</p>
                             <div class="d-grid mt-3">
-                                <a href="student/register.php?event=AI%20%26%20ML" class="btn btn-primary">Register Now</a>
+                                <a href="participant/register.php?event=AI%20%26%20ML" class="btn btn-primary">Register Now</a>
                             </div>
                         </div>
                     </div>
@@ -120,8 +120,8 @@ endif;
                             </div>
                             <h5 class="card-title fw-bold">Web Development with React &amp; Node</h5>
                             <p class="card-text text-muted small">A full-day practical workshop building real-world single page applications. Beginner-friendly steps.</p>
-                            <div class="d-grid mt-3">
-                                <a href="student/register.php?event=Web%20Development" class="btn btn-primary">Register Now</a>
+                             <div class="d-grid mt-3">
+                                <a href="participant/register.php?event=Web%20Development" class="btn btn-primary">Register Now</a>
                             </div>
                         </div>
                     </div>
@@ -141,8 +141,8 @@ endif;
                             </div>
                             <h5 class="card-title fw-bold">Cyber Security &amp; Ethical Hacking</h5>
                             <p class="card-text text-muted small">Demystifying security protocols, firewalls, and exploring ethical hacking tools for modern network systems.</p>
-                            <div class="d-grid mt-3">
-                                <a href="student/register.php?event=Cyber%20Security" class="btn btn-primary">Register Now</a>
+                             <div class="d-grid mt-3">
+                                <a href="participant/register.php?event=Cyber%20Security" class="btn btn-primary">Register Now</a>
                             </div>
                         </div>
                     </div>

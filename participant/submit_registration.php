@@ -1,17 +1,14 @@
 <?php
-// student/submit_registration.php
+// participant/submit_registration.php
 // ------------------------------------------------------------
-// Process student event registration with transaction integrity
+// Process participant event registration with transaction integrity
 // ------------------------------------------------------------
 
-// 1. Include database connection and auth helpers
 require_once '../config/db_connect.php'; 
 require_once '../includes/auth.php';
 
-// Enforce student role
-require_role('student');
+require_role(['participant', 'student']);
 
-// Initialize messaging variables
 $message = "";
 $message_type = "";
 $ticket_token = "";
@@ -19,19 +16,20 @@ $ticket_token = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_id = get_user_id();
     
-    // Collect and sanitize form inputs
-    $full_name     = trim($_POST['full_name'] ?? '');
-    $email         = trim($_POST['email'] ?? '');
-    $mobile        = trim($_POST['mobile'] ?? '');
-    $college       = trim($_POST['college'] ?? '');
-    $department    = trim($_POST['department'] ?? '');
-    $year_of_study = trim($_POST['year_of_study'] ?? '');
-    $event_name    = trim($_POST['event_name'] ?? '');
+    $full_name        = trim($_POST['full_name'] ?? '');
+    $email            = trim($_POST['email'] ?? '');
+    $mobile           = trim($_POST['mobile'] ?? '');
+    $participant_type = trim($_POST['participant_type'] ?? '');
+    $organization     = trim($_POST['organization'] ?? '');
+    $event_id         = intval($_POST['event_id'] ?? 0);
 
     $errors = [];
 
-    if (empty($event_name)) {
-        $errors[] = "Please select a seminar / workshop.";
+    if ($event_id <= 0) {
+        $errors[] = "Please select a valid seminar / workshop.";
+    }
+    if (empty($mobile)) {
+        $errors[] = "Mobile number is required.";
     }
 
     if (!empty($errors)) {
@@ -39,16 +37,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $message_type = "danger";
     } else {
         try {
-            // Retrieve Event ID and check seat availability
-            $event_sql = "SELECT id, seats_remaining, title FROM events WHERE title = ?";
+            // Retrieve Event and check seat availability
+            $event_sql = "SELECT id, seats_remaining, title FROM events WHERE id = ?";
             $event_stmt = $conn->prepare($event_sql);
-            $event_stmt->bind_param("s", $event_name);
+            $event_stmt->bind_param("i", $event_id);
             $event_stmt->execute();
             $event_res = $event_stmt->get_result();
 
             if ($event_res && $event_res->num_rows > 0) {
                 $event_data = $event_res->fetch_assoc();
-                $event_id = $event_data['id'];
                 $seats_remaining = $event_data['seats_remaining'];
                 
                 if ($seats_remaining <= 0) {
@@ -61,12 +58,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             if (empty($message)) {
-                // Start Transaction to guarantee user profile update, registration, and seat deduction consistency
+                // Start Transaction to guarantee profile update, registration, and seat deduction consistency
                 $conn->begin_transaction();
 
-                // If mobile/college/department/year are supplied, update user profile if currently empty
-                // We fetch current profile first to check
-                $profile_sql = "SELECT mobile, college, department, year_of_study FROM users WHERE id = ?";
+                // If mobile/participant_type/organization are supplied, update profile if currently empty
+                $profile_sql = "SELECT mobile, participant_type, organization FROM users WHERE id = ?";
                 $profile_stmt = $conn->prepare($profile_sql);
                 $profile_stmt->bind_param("i", $user_id);
                 $profile_stmt->execute();
@@ -75,21 +71,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if ($profile_res && $profile_res->num_rows > 0) {
                     $profile = $profile_res->fetch_assoc();
                     
-                    // Update only empty columns
                     $new_mobile = !empty($profile['mobile']) ? $profile['mobile'] : $mobile;
-                    $new_college = !empty($profile['college']) ? $profile['college'] : $college;
-                    $new_department = !empty($profile['department']) ? $profile['department'] : $department;
-                    $new_year = !empty($profile['year_of_study']) ? $profile['year_of_study'] : $year_of_study;
+                    $new_cat = !empty($profile['participant_type']) ? $profile['participant_type'] : $participant_type;
+                    $new_org = !empty($profile['organization']) ? $profile['organization'] : $organization;
 
-                    $update_profile_sql = "UPDATE users SET mobile = ?, college = ?, department = ?, year_of_study = ? WHERE id = ?";
+                    $update_profile_sql = "UPDATE users SET mobile = ?, participant_type = ?, organization = ? WHERE id = ?";
                     $update_stmt = $conn->prepare($update_profile_sql);
-                    $update_stmt->bind_param("ssssi", $new_mobile, $new_college, $new_department, $new_year, $user_id);
+                    $update_stmt->bind_param("sssi", $new_mobile, $new_cat, $new_org, $user_id);
                     if (!$update_stmt->execute()) {
-                        throw new Exception("Error updating student profile details.");
+                        throw new Exception("Error updating participant profile details.");
                     }
                 }
 
-                // Check if already registered for this event
+                // Check if already registered
                 $reg_check_sql = "SELECT id, token FROM registrations WHERE user_id = ? AND event_id = ?";
                 $reg_check_stmt = $conn->prepare($reg_check_sql);
                 $reg_check_stmt->bind_param("ii", $user_id, $event_id);
@@ -119,13 +113,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         if ($update_seats_stmt->execute()) {
                             $conn->commit();
                             $ticket_token = $token;
-                            $message = "Registration Successful! Thank you for registering for <strong>" . htmlspecialchars($event_name) . "</strong>.";
+                            $message = "Registration Successful! Thank you for registering for <strong>" . htmlspecialchars($event_data['title']) . "</strong>.";
                             $message_type = "success";
                         } else {
-                            throw new Exception("Error updating event seats: " . $update_seats_stmt->error);
+                            throw new Exception("Error updating event seats.");
                         }
                     } else {
-                        throw new Exception("Error saving registration details: " . $insert_reg_stmt->error);
+                        throw new Exception("Error saving registration details.");
                     }
                 }
             }
@@ -152,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body class="bg-light d-flex flex-column min-vh-100">
 
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="../index.php">
                 <i class="fa-solid fa-graduation-cap text-warning me-2"></i>
@@ -165,11 +159,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="container my-auto py-5">
         <div class="row justify-content-center">
             <div class="col-md-7">
-                <div class="card shadow border-0 p-4 rounded-3 text-center">
+                <div class="card shadow border-0 p-4 p-md-5 rounded-3 text-center bg-white">
                     
                     <?php if ($message_type === "success"): ?>
                         <div class="text-success display-1 mb-3">
-                            <i class="fa-solid fa-circle-check"></i>
+                            <i class="fa-solid fa-circle-check animate__animated animate__bounceIn"></i>
                         </div>
                         <h2 class="fw-bold text-dark mb-3">Submission Received!</h2>
                         <div class="alert alert-success border-0 px-3">
@@ -182,7 +176,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <p class="text-muted small mb-0 mt-2"><i class="fa-solid fa-qrcode me-1"></i> Present this token code to the event coordinator desk on the day of the event.</p>
                             </div>
                         <?php endif; ?>
-                        <p class="text-muted small px-3">We have successfully reserved your slot. You can view this registration inside your student dashboard.</p>
+                        <p class="text-muted small px-3">We have successfully reserved your slot. You can view this registration inside your dashboard.</p>
                     <?php else: ?>
                         <div class="text-<?php echo ($message_type === 'warning') ? 'warning' : 'danger'; ?> display-1 mb-3">
                             <i class="fa-solid <?php echo ($message_type === 'warning') ? 'fa-circle-exclamation' : 'fa-circle-xmark'; ?>"></i>
@@ -203,9 +197,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
 
-    <!-- Minimal Clean Footer -->
+    <!-- Footer -->
     <footer class="bg-dark text-white-50 text-center py-3 mt-auto">
-        <p class="mb-0 small">&copy; 2026 CampusConnect Coordination Suite. Authentication System.</p>
+        <p class="mb-0 small">&copy; 2026 CampusConnect Coordination Suite. Relational Integration.</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

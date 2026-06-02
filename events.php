@@ -1,7 +1,33 @@
 <?php
+// events.php
+// Dynamically loads events from the database
 $base_path = './';
-$page_title = 'Seminars & Workshops - Academic Portal';
+$page_title = 'Seminars & Workshops - Campus Connect';
 $active_page = 'events';
+
+require_once $base_path . 'config/db_connect.php';
+require_once $base_path . 'includes/auth.php';
+
+// Fetch all events from DB ordered by date
+$events = [];
+$events_sql = "SELECT id, title, description, host, event_date, start_time, end_time, location, total_seats, seats_remaining FROM events ORDER BY event_date ASC";
+$events_res = $conn->query($events_sql);
+if ($events_res) {
+    while ($row = $events_res->fetch_assoc()) {
+        $events[] = $row;
+    }
+}
+
+// Map event index to badge type and SVG image
+$badge_types  = ['Seminar', 'Workshop'];
+$event_images = [
+    0 => 'assets/images/event_ai_seminar.svg',
+    1 => 'assets/images/event_web_dev.svg',
+    2 => 'assets/images/event_cyber_security.svg',
+    3 => 'assets/images/event_cloud_computing.svg',
+];
+$default_image = 'assets/images/event_ai_seminar.svg';
+
 include $base_path . 'includes/header.php';
 include $base_path . 'includes/navbar.php';
 ?>
@@ -14,124 +40,91 @@ include $base_path . 'includes/navbar.php';
     </div>
 
     <main class="container mb-5">
+        <?php if (empty($events)): ?>
+            <div class="text-center py-5">
+                <div class="display-1 text-muted mb-3"><i class="fa-solid fa-calendar-xmark"></i></div>
+                <h4 class="text-muted">No events available at the moment.</h4>
+                <p class="text-muted">Please check back later or contact the portal admin.</p>
+            </div>
+        <?php else: ?>
         <div class="row g-4">
-            
-            <div class="col-md-6 col-lg-6">
-                <div class="card event-card position-relative h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <span class="event-badge">Seminar</span>
-                        <img src="assets/images/event_ai_seminar.svg" class="card-img-top" alt="AI and Machine Learning Seminar">
-                        <div class="card-body p-4">
-                            <div class="event-meta">
-                                <span><i class="fa-solid fa-calendar"></i> May 28, 2026</span>
-                                <span class="ms-3"><i class="fa-solid fa-clock"></i> 10:00 AM - 01:00 PM</span>
-                                <br class="d-sm-none">
-                                <span class="ms-sm-3"><i class="fa-solid fa-location-dot"></i> Seminar Hall A</span>
-                            </div>
-                            <h3 class="h4 card-title text-primary">National Seminar on Artificial Intelligence &amp; Machine Learning</h3>
-                            <p class="card-text text-muted">Join us for a detailed panel discussion led by research scientists exploring neural network foundations, transformers, deep learning applications, and future trends of artificial intelligence in software engineering.</p>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 px-4 pb-4">
-                        <div class="row align-items-center">
-                            <div class="col-sm-6 text-muted py-2 py-sm-0">
-                                <i class="fa-solid fa-user-tie me-1"></i> Dr. A. K. Sen (IIT)
-                            </div>
-                            <div class="col-sm-6 text-sm-end">
-                                <a href="student/register.php?event=AI%20%26%20ML" class="btn btn-primary w-100 w-sm-auto px-4">Register <i class="fa-solid fa-arrow-right ms-1"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <?php foreach ($events as $idx => $ev):
+                $registered     = $ev['total_seats'] - $ev['seats_remaining'];
+                $is_full        = ($ev['seats_remaining'] <= 0);
+                $date_fmt       = date("F d, Y", strtotime($ev['event_date']));
+                $time_start     = date("h:i A", strtotime($ev['start_time']));
+                $time_end       = date("h:i A", strtotime($ev['end_time']));
+                // Alternate badge type based on index; detect "workshop" keyword in title too
+                $is_workshop    = stripos($ev['title'], 'workshop') !== false;
+                $badge_class    = $is_workshop ? 'event-badge workshop' : 'event-badge';
+                $badge_label    = $is_workshop ? 'Workshop' : 'Seminar';
+                $img_src        = $event_images[$idx] ?? $default_image;
 
+                // Register link: pass event ID
+                $reg_url = 'participant/register.php?event_id=' . intval($ev['id']);
+            ?>
             <div class="col-md-6 col-lg-6">
                 <div class="card event-card position-relative h-100 d-flex flex-column justify-content-between">
                     <div>
-                        <span class="event-badge workshop">Workshop</span>
-                        <img src="assets/images/event_web_dev.svg" class="card-img-top" alt="Web Development Workshop">
+                        <span class="<?php echo $badge_class; ?>"><?php echo $badge_label; ?></span>
+                        <img src="<?php echo htmlspecialchars($img_src); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($ev['title']); ?>">
                         <div class="card-body p-4">
                             <div class="event-meta">
-                                <span><i class="fa-solid fa-calendar"></i> June 02, 2026</span>
-                                <span class="ms-3"><i class="fa-solid fa-clock"></i> 09:30 AM - 04:30 PM</span>
+                                <span><i class="fa-solid fa-calendar"></i> <?php echo $date_fmt; ?></span>
+                                <span class="ms-3"><i class="fa-solid fa-clock"></i> <?php echo $time_start . ' - ' . $time_end; ?></span>
                                 <br class="d-sm-none">
-                                <span class="ms-sm-3"><i class="fa-solid fa-location-dot"></i> CSE Lab 3</span>
+                                <span class="ms-sm-3"><i class="fa-solid fa-location-dot"></i> <?php echo htmlspecialchars($ev['location']); ?></span>
                             </div>
-                            <h3 class="h4 card-title text-primary">Hands-on Web Development with React &amp; Node.js</h3>
-                            <p class="card-text text-muted">A hands-on coding workshop covering modern full-stack web architectures. Students will build a functional web application with React components, routing, Express API endpoints, and database connection. Highly practical.</p>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 px-4 pb-4">
-                        <div class="row align-items-center">
-                            <div class="col-sm-6 text-muted py-2 py-sm-0">
-                                <i class="fa-solid fa-user-tie me-1"></i> Prof. S. Sharma (Tech Lead)
-                            </div>
-                            <div class="col-sm-6 text-sm-end">
-                                <a href="student/register.php?event=Web%20Development" class="btn btn-primary w-100 w-sm-auto px-4">Register <i class="fa-solid fa-arrow-right ms-1"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                            <h3 class="h4 card-title text-primary"><?php echo htmlspecialchars($ev['title']); ?></h3>
+                            <p class="card-text text-muted"><?php echo htmlspecialchars($ev['description']); ?></p>
 
-            <div class="col-md-6 col-lg-6">
-                <div class="card event-card position-relative h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <span class="event-badge">Seminar</span>
-                        <img src="assets/images/event_cyber_security.svg" class="card-img-top" alt="Cyber Security Seminar">
-                        <div class="card-body p-4">
-                            <div class="event-meta">
-                                <span><i class="fa-solid fa-calendar"></i> June 10, 2026</span>
-                                <span class="ms-3"><i class="fa-solid fa-clock"></i> 11:00 AM - 02:00 PM</span>
-                                <br class="d-sm-none">
-                                <span class="ms-sm-3"><i class="fa-solid fa-location-dot"></i> Main Auditorium</span>
+                            <!-- Seat availability bar -->
+                            <?php
+                            $seat_pct   = ($ev['total_seats'] > 0) ? round(($registered / $ev['total_seats']) * 100) : 0;
+                            $bar_color  = 'bg-success';
+                            if ($seat_pct >= 90)     $bar_color = 'bg-danger';
+                            elseif ($seat_pct >= 60) $bar_color = 'bg-warning';
+                            ?>
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <span><i class="fa-solid fa-chair me-1"></i><?php echo intval($ev['seats_remaining']); ?> seats left</span>
+                                    <span><?php echo intval($ev['total_seats']); ?> total</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar <?php echo $bar_color; ?>" style="width: <?php echo $seat_pct; ?>%"></div>
+                                </div>
                             </div>
-                            <h3 class="h4 card-title text-primary">Seminar on Cyber Security &amp; Ethical Hacking</h3>
-                            <p class="card-text text-muted">Understand security vulnerabilities in standard network protocols, scanning techniques, firewalls, and data protection regulations. Features a live demonstration of hacking mitigation steps by network security professionals.</p>
                         </div>
                     </div>
                     <div class="card-footer bg-white border-0 px-4 pb-4">
                         <div class="row align-items-center">
                             <div class="col-sm-6 text-muted py-2 py-sm-0">
-                                <i class="fa-solid fa-user-tie me-1"></i> Mr. Rajiv Malhotra (EC-Council)
+                                <i class="fa-solid fa-user-tie me-1"></i> <?php echo htmlspecialchars($ev['host']); ?>
                             </div>
                             <div class="col-sm-6 text-sm-end">
-                                <a href="student/register.php?event=Cyber%20Security" class="btn btn-primary w-100 w-sm-auto px-4">Register <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                                <?php if ($is_full): ?>
+                                    <button class="btn btn-secondary w-100 w-sm-auto px-4" disabled>
+                                        <i class="fa-solid fa-ban me-1"></i>Fully Booked
+                                    </button>
+                                <?php elseif (!is_logged_in()): ?>
+                                    <a href="auth/login.php" class="btn btn-outline-primary w-100 w-sm-auto px-4">
+                                        <i class="fa-solid fa-right-to-bracket me-1"></i>Login to Register
+                                    </a>
+                                <?php elseif (get_user_role() === 'participant' || get_user_role() === 'student'): ?>
+                                    <a href="<?php echo $reg_url; ?>" class="btn btn-primary w-100 w-sm-auto px-4">
+                                        Register <i class="fa-solid fa-arrow-right ms-1"></i>
+                                    </a>
+                                <?php else: ?>
+                                    <span class="text-muted small">Admin/Coordinator view</span>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="col-md-6 col-lg-6">
-                <div class="card event-card position-relative h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <span class="event-badge workshop">Workshop</span>
-                        <img src="assets/images/event_cloud_computing.svg" class="card-img-top" alt="Cloud Computing Workshop">
-                        <div class="card-body p-4">
-                            <div class="event-meta">
-                                <span><i class="fa-solid fa-calendar"></i> June 15, 2026</span>
-                                <span class="ms-3"><i class="fa-solid fa-clock"></i> 09:30 AM - 04:30 PM</span>
-                                <br class="d-sm-none">
-                                <span class="ms-sm-3"><i class="fa-solid fa-location-dot"></i> CSE Lab 5</span>
-                            </div>
-                            <h3 class="h4 card-title text-primary">Workshop on Cloud Computing &amp; AWS Services</h3>
-                            <p class="card-text text-muted">A deep dive workshop focused on hosting and deploying services on Amazon Web Services. Hands-on configuration of AWS EC2 instances, S3 buckets, AWS Lambdas, and serverless compute pipelines. Excellent for projects.</p>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-white border-0 px-4 pb-4">
-                        <div class="row align-items-center">
-                            <div class="col-sm-6 text-muted py-2 py-sm-0">
-                                <i class="fa-solid fa-user-tie me-1"></i> Mrs. Priya Verma (AWS Solutions Architect)
-                            </div>
-                            <div class="col-sm-6 text-sm-end">
-                                <a href="student/register.php?event=Cloud%20Computing" class="btn btn-primary w-100 w-sm-auto px-4">Register <i class="fa-solid fa-arrow-right ms-1"></i></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </main>
 
 <?php

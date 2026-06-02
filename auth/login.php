@@ -15,7 +15,7 @@ if (is_logged_in()) {
     } elseif ($role === 'coordinator') {
         header("Location: ../coordinator/dashboard.php");
     } else {
-        header("Location: ../student/dashboard.php");
+        header("Location: ../participant/dashboard.php");
     }
     exit;
 }
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } elseif ($user['role'] === 'coordinator') {
                         header("Location: ../coordinator/dashboard.php");
                     } else {
-                        header("Location: ../student/dashboard.php");
+                        header("Location: ../participant/dashboard.php");
                     }
                 }
                 exit;

@@ -31,7 +31,7 @@ require_once $base_path . 'includes/auth.php';
                         <a href="<?php echo $base_path; ?>auth/signup.php" class="btn btn-warning btn-sm px-3 text-dark fw-bold">Sign Up</a>
                     </li>
                     
-                <?php elseif (get_user_role() === 'student'): // Student Menu ?>
+                <?php elseif (get_user_role() === 'participant' || get_user_role() === 'student'): // Participant Menu ?>
                     <li class="nav-item">
                         <a class="nav-link<?php echo (isset($active_page) && $active_page === 'home') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>index.php">Home</a>
                     </li>
@@ -39,10 +39,13 @@ require_once $base_path . 'includes/auth.php';
                         <a class="nav-link<?php echo (isset($active_page) && $active_page === 'events') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>events.php">Events</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link<?php echo (isset($active_page) && $active_page === 'student_dashboard') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>student/dashboard.php">Dashboard</a>
+                        <a class="nav-link<?php echo (isset($active_page) && $active_page === 'participant_dashboard') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>participant/dashboard.php">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo $base_path; ?>participant/dashboard.php#my-registrations">My Registrations</a>
                     </li>
                     <li class="nav-item ms-lg-3 mt-2 mt-lg-0 text-white-50 d-flex align-items-center">
-                        <span class="badge bg-secondary px-2 py-1 me-2 text-capitalize"><i class="fa-solid fa-user me-1"></i>Student</span>
+                        <span class="badge bg-secondary px-2 py-1 me-2 text-capitalize"><i class="fa-solid fa-user me-1"></i>Participant</span>
                         <span class="text-light text-truncate d-inline-block align-middle" style="max-width: 120px;" title="<?php echo htmlspecialchars(get_user_name()); ?>"><?php echo htmlspecialchars(get_user_name()); ?></span>
                     </li>
                     <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
@@ -59,10 +62,13 @@ require_once $base_path . 'includes/auth.php';
                         <a class="nav-link<?php echo (isset($active_page) && $active_page === 'events') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>events.php">Events</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_students') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/students.php">Students</a>
+                        <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_participants') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/participants.php">Participants</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_attendance') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/attendance.php">Attendance</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_feedback') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/feedback.php">Feedback</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_certificates') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/certificates.php">Certificates</a>

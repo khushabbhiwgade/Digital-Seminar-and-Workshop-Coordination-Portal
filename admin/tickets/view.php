@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $del_att->execute();
 
                 // If there's a certificate, delete it
-                $del_cert = $conn->prepare("DELETE FROM workshop_certificates WHERE ticket_id = ?");
+                $del_cert = $conn->prepare("DELETE FROM certificates WHERE registration_id = ?");
                 $del_cert->bind_param("i", $ticket_id);
                 $del_cert->execute();
 

@@ -174,7 +174,11 @@ endif;
                                         </div>
                                     </div>
                                     <div class="d-grid">
-                                        <a href="<?php echo $btn_path; ?>" class="btn btn-warning text-dark fw-bold"><?php echo $btn_text; ?></a>
+                                        <?php if (is_logged_in() && get_user_role() === 'student'): ?>
+                                            <button type="button" class="btn btn-warning text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#registerModal" data-workshop-id="<?php echo $ws['id']; ?>" data-workshop-name="<?php echo htmlspecialchars($ws['title']); ?>">Register Now</button>
+                                        <?php else: ?>
+                                            <a href="<?php echo $btn_path; ?>" class="btn btn-warning text-dark fw-bold"><?php echo $btn_text; ?></a>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>

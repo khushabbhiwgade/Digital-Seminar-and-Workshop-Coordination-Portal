@@ -29,11 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = trim($_POST['password'] ?? '');
     $confirm_password = trim($_POST['confirm_password'] ?? '');
-    $participant_type = trim($_POST['participant_type'] ?? '');
-    $organization = trim($_POST['organization'] ?? '');
 
     // Validation
-    if (empty($full_name) || empty($email) || empty($password) || empty($confirm_password) || empty($participant_type) || empty($organization)) {
+    if (empty($full_name) || empty($email) || empty($password) || empty($confirm_password)) {
         $error_msg = "All fields are required.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error_msg = "Please enter a valid email address.";
@@ -41,8 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_msg = "Password must be at least 8 characters long.";
     } elseif ($password !== $confirm_password) {
         $error_msg = "Password and confirm password do not match.";
-    } elseif (!in_array($participant_type, ['student', 'coordinator'])) {
-        $error_msg = "Invalid participant type selected.";
     } else {
         // Check if email already exists
         $check_sql = "SELECT id FROM users WHERE email = ?";
@@ -60,9 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Hash password and insert user with is_verified = 0 and otp_attempts = 0
             $hashed_pass = password_hash($password, PASSWORD_BCRYPT);
+            $role = 'student';
+            $college = NULL;
             $insert_sql = "INSERT INTO users (email, password, full_name, role, college, is_verified, otp_code, otp_expiry, otp_attempts) VALUES (?, ?, ?, ?, ?, 0, ?, ?, 0)";
             $insert_stmt = $conn->prepare($insert_sql);
-            $insert_stmt->bind_param("sssssss", $email, $hashed_pass, $full_name, $participant_type, $organization, $otp_code, $otp_expiry);
+            $insert_stmt->bind_param("sssssss", $email, $hashed_pass, $full_name, $role, $college, $otp_code, $otp_expiry);
 
             if ($insert_stmt->execute()) {
                 // Send the verification OTP email
@@ -119,26 +117,6 @@ include $base_path . 'includes/navbar.php';
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-envelope"></i></span>
                                 <input type="email" class="form-control" id="email" name="email" placeholder="name@college.edu" value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="participant_type" class="form-label fw-semibold">Participant Type <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-user-tag"></i></span>
-                                <select class="form-select" id="participant_type" name="participant_type" required>
-                                    <option value="" disabled <?php echo !isset($_POST['participant_type']) ? 'selected' : ''; ?>>Select Type</option>
-                                    <option value="student" <?php echo (isset($_POST['participant_type']) && $_POST['participant_type'] === 'student') ? 'selected' : ''; ?>>Student</option>
-                                    <option value="coordinator" <?php echo (isset($_POST['participant_type']) && $_POST['participant_type'] === 'coordinator') ? 'selected' : ''; ?>>Coordinator / Faculty</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="organization" class="form-label fw-semibold">Organization / College <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-building-columns"></i></span>
-                                <input type="text" class="form-control" id="organization" name="organization" placeholder="e.g., Apex Institute of Technology" value="<?php echo isset($_POST['organization']) ? htmlspecialchars($_POST['organization']) : ''; ?>" required>
                             </div>
                         </div>
 

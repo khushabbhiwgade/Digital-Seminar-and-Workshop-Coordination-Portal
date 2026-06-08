@@ -4,7 +4,7 @@
 // E2E Verification Test Suite - Phase 9 Rebuild Flow
 // ------------------------------------------------------------
 
-define('ROOT_PATH', 'c:/xampp/htdocs/seminar_portal/');
+define('ROOT_PATH', dirname(__DIR__) . '/');
 
 require_once ROOT_PATH . 'config/db_connect.php';
 

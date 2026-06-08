@@ -5,7 +5,7 @@
 // Supports new tickets table schema and relation mappings.
 // ------------------------------------------------------------
 
-define('ROOT_PATH', 'c:/xampp/htdocs/seminar_portal/');
+define('ROOT_PATH', dirname(__DIR__) . '/');
 
 require_once ROOT_PATH . 'config/db_connect.php';
 
@@ -42,7 +42,7 @@ $stmt->execute();
 $comp = $stmt->get_result()->fetch_assoc()['cnt'];
 
 // Certificates
-$stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM workshop_certificates wc JOIN tickets t ON wc.ticket_id = t.id WHERE t.user_id = ?");
+$stmt = $conn->prepare("SELECT COUNT(*) as cnt FROM certificates c JOIN tickets t ON c.registration_id = t.id WHERE t.user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $certs = $stmt->get_result()->fetch_assoc()['cnt'];
@@ -62,9 +62,9 @@ if ($reg >= 0 && $comp >= 0 && $certs >= 0) {
 echo "[2/5] Testing upcoming workshops registration candidates listing...\n";
 // Available workshops that the user has not registered for (active or completed tickets)
 $reg_ids = [];
-$reg_res = $conn->query("SELECT workshop_id FROM tickets WHERE user_id = $user_id");
+$reg_res = $conn->query("SELECT event_id FROM tickets WHERE user_id = $user_id");
 while ($r = $reg_res->fetch_assoc()) {
-    $reg_ids[] = (int)$r['workshop_id'];
+    $reg_ids[] = (int)$r['event_id'];
 }
 
 $ws_res = $conn->query("SELECT id, title FROM workshops WHERE status IN ('active', 'upcoming') AND start_date >= CURDATE()");
@@ -81,7 +81,7 @@ echo "      Enrollment filter checks: PASS.\n";
 echo "[3/5] Simulating quick-registration transaction (register_workshop.php)...\n";
 // Pick a workshop ID that the student hasn't registered for, say workshop 4
 $target_ws_id = 4;
-$conn->query("DELETE FROM tickets WHERE user_id = $user_id AND workshop_id = $target_ws_id");
+$conn->query("DELETE FROM tickets WHERE user_id = $user_id AND event_id = $target_ws_id");
 
 // Check current seats remaining
 $chk_seat = $conn->query("SELECT seats_remaining, title FROM workshops WHERE id = $target_ws_id")->fetch_assoc();
@@ -102,7 +102,7 @@ $qr_code_path = "uploads/qrcodes/" . $ticket_number . ".png";
 
 echo "      Generated Ticket Number: $ticket_number\n";
 
-$ins_stmt = $conn->prepare("INSERT INTO tickets (user_id, workshop_id, ticket_number, qr_code_path, status) VALUES (?, ?, ?, ?, 'active')");
+$ins_stmt = $conn->prepare("INSERT INTO tickets (user_id, event_id, ticket_number, qr_code_path, status) VALUES (?, ?, ?, ?, 'active')");
 $ins_stmt->bind_param("iiss", $user_id, $target_ws_id, $ticket_number, $qr_code_path);
 $ins_stmt->execute();
 
@@ -133,7 +133,7 @@ try {
 }
 
 echo "[5/5] Cleaning up test registration data...\n";
-$conn->query("DELETE FROM tickets WHERE user_id = $user_id AND workshop_id = $target_ws_id");
+$conn->query("DELETE FROM tickets WHERE user_id = $user_id AND event_id = $target_ws_id");
 $conn->query("UPDATE workshops SET seats_remaining = seats_remaining + 1 WHERE id = $target_ws_id");
 echo "      Cleanup completed successfully.\n";
 

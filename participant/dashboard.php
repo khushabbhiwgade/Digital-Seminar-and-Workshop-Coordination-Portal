@@ -176,7 +176,7 @@ include $base_path . 'includes/navbar.php';
                                 
                                 <form method="POST" action="register_workshop.php" class="align-self-center">
                                     <input type="hidden" name="workshop_id" value="<?php echo $ws['id']; ?>">
-                                    <button type="submit" class="btn btn-sm btn-warning text-dark fw-bold px-3">Register</button>
+                                    <button type="button" class="btn btn-sm btn-warning text-dark fw-bold px-3" data-bs-toggle="modal" data-bs-target="#registerModal" data-workshop-id="<?php echo $ws['id']; ?>" data-workshop-name="<?php echo htmlspecialchars($ws['title']); ?>">Register</button>
                                 </form>
                             </div>
                         <?php endwhile; ?>

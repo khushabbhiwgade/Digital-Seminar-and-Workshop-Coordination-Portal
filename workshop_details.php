@@ -39,7 +39,7 @@ $reg_status = "";
 
 if (!$is_guest && $user_role === 'student') {
     // Check if already registered
-    $chk_sql = "SELECT id, status FROM workshop_registrations WHERE user_id = ? AND workshop_id = ?";
+    $chk_sql = "SELECT id, status FROM tickets WHERE user_id = ? AND event_id = ?";
     $chk_stmt = $conn->prepare($chk_sql);
     $chk_stmt->bind_param("ii", $user_id, $workshop_id);
     $chk_stmt->execute();
@@ -157,7 +157,7 @@ include $base_path . 'includes/navbar.php';
                         <!-- 5. Active & Logged-in Student: Register Form -->
                         <form method="POST" action="<?php echo $base_path; ?>participant/register_workshop.php">
                             <input type="hidden" name="workshop_id" value="<?php echo $ws['id']; ?>">
-                            <button type="submit" class="btn btn-warning text-dark fw-bold btn-lg w-100 shadow-sm py-2.5">
+                            <button type="button" class="btn btn-warning text-dark fw-bold btn-lg w-100 shadow-sm py-2.5" data-bs-toggle="modal" data-bs-target="#registerModal" data-workshop-id="<?php echo $ws['id']; ?>" data-workshop-name="<?php echo htmlspecialchars($ws['title']); ?>">
                                 <i class="fa-solid fa-user-plus me-2"></i>Register for Workshop
                             </button>
                         </form>

@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && isset($_
             $upd_stmt->execute();
 
             // B. Delete certificate and attendance logs if any exist
-            $del_cert = $conn->prepare("DELETE FROM workshop_certificates WHERE ticket_id = ?");
+            $del_cert = $conn->prepare("DELETE FROM certificates WHERE registration_id = ?");
             $del_cert->bind_param("i", $ticket_id);
             $del_cert->execute();
 

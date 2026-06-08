@@ -15,11 +15,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $workshop_id = intval($_POST['workshop_id'] ?? 0);
 
     if ($workshop_id <= 0) {
+        if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Invalid workshop selection.']);
+            exit;
+        }
         header("Location: dashboard.php?error=" . urlencode("Invalid workshop selection."));
         exit;
     }
 
     try {
+        // Save mobile number if passed
+        if (isset($_POST['mobile'])) {
+            $mobile = trim($_POST['mobile']);
+            if (!empty($mobile)) {
+                $upd_mobile = $conn->prepare("UPDATE users SET mobile = ? WHERE id = ?");
+                $upd_mobile->bind_param("si", $mobile, $user_id);
+                $upd_mobile->execute();
+            }
+        }
+
         // 1. Start Database Transaction FIRST for atomic concurrency protection
         $conn->begin_transaction();
 
@@ -140,15 +155,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // F. Commit Transaction
         $conn->commit();
 
+        if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Successfully registered for the workshop!']);
+            exit;
+        }
         header("Location: dashboard.php?msg=register_success");
         exit;
 
     } catch (Exception $e) {
         $conn->rollback();
+        if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            exit;
+        }
         header("Location: dashboard.php?error=" . urlencode($e->getMessage()));
         exit;
     }
 } else {
+    if (isset($_GET['ajax']) && $_GET['ajax'] == '1') {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        exit;
+    }
     header("Location: dashboard.php");
     exit;
 }

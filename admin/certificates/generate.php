@@ -185,9 +185,9 @@ include $base_path . 'includes/navbar.php';
 
 <div class="container my-5">
     <!-- Header Greeting -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-            <h1 class="h2 mb-0"><i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>Certificate Generation Desk</h1>
+            <h1 class="h2 mb-0 fw-bold"><i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>Certificate Generation Desk</h1>
             <p class="text-muted mb-0">Validate eligibility and generate digital credentials in single or bulk batches.</p>
         </div>
         <div class="d-flex gap-2">
@@ -239,24 +239,27 @@ include $base_path . 'includes/navbar.php';
                 <div class="card-header bg-dark text-white py-3">
                     <h5 class="mb-0"><i class="fa-solid fa-user-graduate text-warning me-2"></i>Generate Single Certificate</h5>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
                     <form method="POST">
                         <input type="hidden" name="action" value="single">
                         
                         <div class="mb-3">
-                            <label for="ticket_id" class="form-label fw-semibold">Select Eligible Participant</label>
-                            <select name="ticket_id" id="ticket_id" class="form-select" required>
-                                <option value="">— Select student registration —</option>
-                                <?php foreach ($eligible_dropdown as $student): ?>
-                                    <option value="<?php echo $student['id']; ?>">
-                                        <?php echo htmlspecialchars($student['full_name']); ?> — <?php echo htmlspecialchars($student['ws_title']); ?> (<?php echo htmlspecialchars($student['ticket_number']); ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <div class="form-text">Listing only participants marked <strong>Present</strong> whose registrations are <strong>Completed</strong> and do not yet have a certificate.</div>
+                            <label for="ticket_id" class="form-label fw-bold text-dark">Select Eligible Participant</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-user"></i></span>
+                                <select name="ticket_id" id="ticket_id" class="form-select" required>
+                                    <option value="">— Select student registration —</option>
+                                    <?php foreach ($eligible_dropdown as $student): ?>
+                                        <option value="<?php echo $student['id']; ?>">
+                                            <?php echo htmlspecialchars($student['full_name']); ?> — <?php echo htmlspecialchars($student['ws_title']); ?> (<?php echo htmlspecialchars($student['ticket_number']); ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-text mt-2 text-muted">Listing only participants marked <strong>Present</strong> whose registrations are <strong>Completed</strong> and do not yet have a certificate.</div>
                         </div>
                         
-                        <button type="submit" class="btn btn-warning text-dark fw-bold w-100 mt-2 shadow-sm">
+                        <button type="submit" class="btn btn-warning text-dark fw-bold w-100 mt-3 shadow-sm rounded-pill py-2">
                             <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Generate Certificate
                         </button>
                     </form>
@@ -270,24 +273,27 @@ include $base_path . 'includes/navbar.php';
                 <div class="card-header bg-dark text-white py-3">
                     <h5 class="mb-0"><i class="fa-solid fa-layer-group text-warning me-2"></i>Generate Workshop Batch</h5>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
                     <form method="POST">
                         <input type="hidden" name="action" value="workshop">
                         
                         <div class="mb-3">
-                            <label for="workshop_id" class="form-label fw-semibold">Select Workshop</label>
-                            <select name="workshop_id" id="workshop_id" class="form-select" required>
-                                <option value="">— Select workshop —</option>
-                                <?php foreach ($workshops_dropdown as $ws): ?>
-                                    <option value="<?php echo $ws['id']; ?>">
-                                        <?php echo htmlspecialchars($ws['title']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <div class="form-text">Processes bulk generation for all eligible attendees of the chosen workshop in a single action.</div>
+                            <label for="workshop_id" class="form-label fw-bold text-dark">Select Workshop</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-chalkboard-user"></i></span>
+                                <select name="workshop_id" id="workshop_id" class="form-select" required>
+                                    <option value="">— Select workshop —</option>
+                                    <?php foreach ($workshops_dropdown as $ws): ?>
+                                        <option value="<?php echo $ws['id']; ?>">
+                                            <?php echo htmlspecialchars($ws['title']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-text mt-2 text-muted">Processes bulk generation for all eligible attendees of the chosen workshop in a single action.</div>
                         </div>
                         
-                        <button type="submit" class="btn btn-primary w-100 mt-2 shadow-sm fw-bold" onclick="return confirm('Generate certificates for all eligible attendees of this workshop?');">
+                        <button type="submit" class="btn btn-primary w-100 mt-3 shadow-sm fw-bold rounded-pill py-2" onclick="return confirm('Generate certificates for all eligible attendees of this workshop?');">
                             <i class="fa-solid fa-paper-plane me-2"></i>Generate Workshop Batch
                         </button>
                     </form>
@@ -302,17 +308,17 @@ include $base_path . 'includes/navbar.php';
                     <h5 class="mb-0"><i class="fa-solid fa-circle-nodes text-warning me-2"></i>Global Bulk Generation Desk</h5>
                 </div>
                 <div class="card-body p-4 text-center">
-                    <div class="display-6 text-warning mb-2"><i class="fa-solid fa-scroll"></i></div>
-                    <h4 class="fw-bold mb-1">Global Generation Dashboard</h4>
+                    <div class="display-6 text-warning mb-3"><i class="fa-solid fa-scroll"></i></div>
+                    <h4 class="fw-bold mb-2">Global Generation Dashboard</h4>
                     <p class="text-muted mb-4 px-md-5">
-                        There are currently <span class="badge bg-warning text-dark fw-bold px-2.5 py-1"><?php echo intval($pending_global_count); ?></span> eligible participant check-ins awaiting digital credentials. Running a global bulk action will process and issue certificates for all outstanding records.
+                        There are currently <span class="badge bg-warning text-dark fw-bold px-3 py-1.5 fs-7 rounded-pill"><?php echo intval($pending_global_count); ?></span> eligible participant check-ins awaiting digital credentials. Running a global bulk action will process and issue certificates for all outstanding records.
                     </p>
                     
                     <form method="POST">
                         <input type="hidden" name="action" value="bulk">
                         <?php if ($pending_global_count > 0): ?>
                             <button type="submit" class="btn btn-warning text-dark fw-bold px-5 py-2.5 shadow-sm rounded-pill" onclick="return confirm('WARNING: You are about to generate certificates globally for <?php echo $pending_global_count; ?> outstanding check-ins. Proceed?');">
-                                <i class="fa-solid fa-bolt me-2"></i>Run Global Bulk Generation (<?php echo $pending_global_count; ?> Pending)
+                               <i class="fa-solid fa-bolt me-2 text-primary"></i>Run Global Bulk Generation (<?php echo $pending_global_count; ?> Pending)
                             </button>
                         <?php else: ?>
                             <button type="button" class="btn btn-outline-secondary px-5 py-2.5 rounded-pill" disabled>

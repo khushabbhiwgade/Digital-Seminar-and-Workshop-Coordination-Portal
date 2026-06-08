@@ -99,11 +99,11 @@ include $base_path . 'includes/navbar.php';
     <!-- Quick Link Actions for Admin Tasks -->
     <div class="row g-4 mb-4">
         <div class="col-md-3 col-sm-6">
-            <a href="students.php" class="text-decoration-none text-dark">
+            <a href="registrations/manage.php" class="text-decoration-none text-dark">
                 <div class="card h-100 border-0 shadow-sm rounded-3 p-3 bg-white hover-card text-center">
-                    <div class="display-6 text-primary mb-2"><i class="fa-solid fa-users"></i></div>
-                    <h5 class="fw-bold mb-1">Student Accounts</h5>
-                    <span class="text-muted small">Manage student records</span>
+                    <div class="display-6 text-info mb-2"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <h5 class="fw-bold mb-1">Registrations Desk</h5>
+                    <span class="text-muted small">Approve and audit enrollments</span>
                 </div>
             </a>
         </div>
@@ -256,6 +256,16 @@ include $base_path . 'includes/navbar.php';
         </div>
     </div>
 </div>
+
+<style>
+.hover-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.hover-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+</style>
 
 <?php
 include $base_path . 'includes/footer.php';

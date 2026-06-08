@@ -65,9 +65,6 @@ require_once $base_path . 'includes/auth.php';
                         <a class="nav-link<?php echo (isset($active_page) && $active_page === 'events') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>index.php#featured-events">Events</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_students') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/students.php">Students</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_workshops') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/workshops/manage.php">Workshops</a>
                     </li>
                     <li class="nav-item">
@@ -84,9 +81,6 @@ require_once $base_path . 'includes/auth.php';
                     </li>
                     <li class="nav-item">
                         <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_feedback') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/feedback/manage.php">Feedback</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link<?php echo (isset($active_page) && $active_page === 'admin_reports') ? ' active' : ''; ?>" href="<?php echo $base_path; ?>admin/reports.php">Reports</a>
                     </li>
                     <li class="nav-item ms-lg-3 mt-2 mt-lg-0 text-white-50 d-flex align-items-center">
                         <span class="badge bg-danger px-2 py-1 me-2">Admin</span>

@@ -52,7 +52,7 @@ endif;
                     </div>
                 </div>
                 <div class="col-lg-5 d-none d-lg-block text-center">
-                    <img src="assets/images/Screenshot 2026-05-26 161333.png" alt="Portal Illustration" class="img-fluid rounded-3 shadow-lg" style="border: 1px solid rgba(255, 255, 255, 0.1); max-height: 380px; object-fit: cover;">
+                    <img src="assets/images/Hero_Image.jpg" alt="Portal Illustration" class="img-fluid rounded-3 shadow-lg" style="border: 1px solid rgba(255, 255, 255, 0.1); max-height: 380px; object-fit: cover;">
                 </div>
             </div>
         </div>

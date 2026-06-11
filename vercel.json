@@ -1,22 +1,7 @@
 {
   "version": 2,
   "functions": {
-    "api/**/*.php": {
-      "runtime": "vercel-php@0.7.2"
-    },
-    "*.php": {
-      "runtime": "vercel-php@0.7.2"
-    },
-    "admin/**/*.php": {
-      "runtime": "vercel-php@0.7.2"
-    },
-    "auth/**/*.php": {
-      "runtime": "vercel-php@0.7.2"
-    },
-    "coordinator/**/*.php": {
-      "runtime": "vercel-php@0.7.2"
-    },
-    "participant/**/*.php": {
+    "**/*.php": {
       "runtime": "vercel-php@0.7.2"
     }
   },

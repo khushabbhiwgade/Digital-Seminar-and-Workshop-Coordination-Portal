@@ -1,8 +1,9 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "seminar_portal"; // Updated to match your exact database from phpMyAdmin
+$servername = getenv('DB_HOST') ?: "localhost";
+$username = getenv('DB_USER') ?: "root";
+$password = getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : "";
+$dbname = getenv('DB_NAME') ?: "seminar_portal";
+
 
 // Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);

@@ -7,12 +7,20 @@
   },
   "routes": [
     {
-      "src": "/(assets|uploads)/(.*)",
-      "dest": "/$1/$2"
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/uploads/(.*)",
+      "dest": "/uploads/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/$1.php"
+    },
+    {
+      "src": "^/index$",
+      "dest": "/index.php"
     }
   ]
 }
